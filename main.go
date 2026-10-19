@@ -41,7 +41,7 @@ func newApp(_ string) (*App, error) {
 	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") {
 		return nil, &url.Error{Op: "parse FORUM_URL", URL: forum, Err: errInvalidForum{}}
 	}
-	t, err := template.ParseFS(assets, "templates/*.html")
+	t, err := template.New("").Funcs(baseTemplateFuncs()).ParseFS(assets, "templates/*.html")
 	return &App{tmpl: t, forum: strings.TrimRight(forum, "/")}, err
 }
 
@@ -71,7 +71,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.URL.Path == "/" {
-		http.Redirect(w, r, "/en/", 302)
+		http.Redirect(w, r, "/"+preferredLanguage(r)+"/", 302)
 		return
 	}
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
@@ -79,6 +79,7 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	rememberLanguage(w, parts[0])
 	p := Page{Lang: parts[0], Dir: "ltr", Section: "home"}
 	p.Arabic = p.Lang == "ar"
 	if p.Arabic {
@@ -89,10 +90,10 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	switch p.Section {
 	case "forum":
-		http.Redirect(w, r, a.forum+"/", http.StatusFound)
+		http.Redirect(w, r, a.forum+"/?lang="+p.Lang, http.StatusFound)
 		return
 	case "search":
-		http.Redirect(w, r, a.forum+"?q="+url.QueryEscape(r.URL.Query().Get("q")), http.StatusFound)
+		http.Redirect(w, r, a.forum+"?lang="+p.Lang+"&q="+url.QueryEscape(r.URL.Query().Get("q")), http.StatusFound)
 		return
 	case "articles", "learn":
 		a.serveCatalog(w, r, p, parts)

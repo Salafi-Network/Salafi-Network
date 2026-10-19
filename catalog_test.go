@@ -18,7 +18,7 @@ func TestCatalogRoutesAndFilters(t *testing.T) {
 		status         int
 	}{
 		{"/en/articles", "Read beneficial articles", 200}, {"/ar/articles", "اقرأ مقالات نافعة", 200}, {"/en/learn", "Learn with clarity", 200}, {"/ar/learn", "تعلّم بوضوح", 200},
-		{"/en/articles/a-steady-study-routine", "Start with a manageable session", 200}, {"/en/learn/reading-plan", "data-path=\"reading-plan\"", 200},
+		{"/en/articles/a-steady-study-routine", "Start with a manageable session", 200}, {"/en/learn/reading-plan", "class=\"resource-roadmap\"", 200},
 		{"/en/learn?format=book", "Explore books", 200}, {"/en/learn?format=scholar", "Official resource directory", 200},
 		{"/en/articles?q=zzzzzz", "No matching resources", 200}, {"/en/learn/not-a-resource", "", 404}, {"/en/articles/reading-plan", "", 404}, {"/en/learn/reading-plan/extra", "", 404},
 	} {

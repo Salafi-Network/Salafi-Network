@@ -124,14 +124,39 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 				}
 				return ""
 			}
-			if strings.TrimSpace(t+value("step_ar")) == "" {
-				continue
-			}
+
 			href := strings.TrimSpace(value("step_href"))
 			if href != "" && !regexp.MustCompile(`^/(articles|learn)/[a-z0-9-]+$`).MatchString(href) {
 				return errors.New("Step links must be /articles/url-name or /learn/url-name.")
 			}
-			item.Steps = append(item.Steps, catalogStep{localizedText{t, value("step_ar")}, localizedText{value("step_body_en"), value("step_body_ar")}, href})
+			titleAR := value("step_ar")
+			if href != "" {
+				var raw string
+				parts := strings.Split(href, "/")
+				if err := c.db.QueryRow("SELECT payload FROM library WHERE slug=?", parts[len(parts)-1]).Scan(&raw); err != nil {
+					return errors.New("That resource is no longer available. Select another resource.")
+				}
+				var linked catalogItem
+				if err := json.Unmarshal([]byte(raw), &linked); err != nil {
+					return err
+				}
+				expected := "/learn/" + linked.Slug
+				if linked.Kind == "article" {
+					expected = "/articles/" + linked.Slug
+				}
+				if linked.Kind == "path" || href != expected {
+					return errors.New("Choose an article, book, or scholar for this collection.")
+				}
+				if strings.TrimSpace(t+titleAR) == "" {
+					t = linked.Title.EN
+					titleAR = linked.Title.AR
+				}
+			}
+			if strings.TrimSpace(t+titleAR) == "" {
+				continue
+			}
+
+			item.Steps = append(item.Steps, catalogStep{localizedText{t, titleAR}, localizedText{value("step_body_en"), value("step_body_ar")}, href})
 		}
 		if strings.TrimSpace(item.Title.EN) == "" && strings.TrimSpace(item.Title.AR) == "" {
 			return errors.New("Add a title in your chosen language.")

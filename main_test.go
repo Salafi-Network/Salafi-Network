@@ -26,7 +26,7 @@ func TestLandingAndLibrary(t *testing.T) {
 func TestForumRedirectsAndRetiredRoutes(t *testing.T) {
 	t.Setenv("FORUM_URL", "http://localhost")
 	a, _ := newApp("")
-	cases := map[string]string{"/en/forum": "http://localhost/", "/ar/forum": "http://localhost/", "/en/forum/old-topic": "http://localhost/", "/en/search?q=books+%26+learning": "http://localhost?q=books+%26+learning"}
+	cases := map[string]string{"/en/forum": "http://localhost/?lang=en", "/ar/forum": "http://localhost/?lang=ar", "/en/forum/old-topic": "http://localhost/?lang=en", "/en/search?q=books+%26+learning": "http://localhost?lang=en&q=books+%26+learning"}
 	for path, want := range cases {
 		w := httptest.NewRecorder()
 		a.ServeHTTP(w, httptest.NewRequest("GET", path, nil))
@@ -48,7 +48,7 @@ func TestForumConfiguration(t *testing.T) {
 	}
 	w := httptest.NewRecorder()
 	a.ServeHTTP(w, httptest.NewRequest("GET", "/en/forum", nil))
-	if w.Header().Get("Location") != "https://forum.example.com/" {
+	if w.Header().Get("Location") != "https://forum.example.com/?lang=en" {
 		t.Fatal("Configured destination ignored")
 	}
 	t.Setenv("FORUM_URL", "javascript:alert(1)")

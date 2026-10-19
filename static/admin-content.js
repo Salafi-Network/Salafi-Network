@@ -10,9 +10,16 @@ if (editor) {
     editor.querySelectorAll('[data-lang]').forEach(block => block.hidden = language.value !== 'both' && block.dataset.lang !== language.value);
     ['en', 'ar'].forEach(lang => editor.querySelector('[name="title_' + lang + '"]').required = language.value === 'both' || language.value === lang);
     editor.querySelector('[data-path-fields]').hidden = !kind || kind.value !== 'path';
+    editor.querySelector('[data-article-fields]').hidden = kind?.value === 'path';
+    editor.querySelectorAll('.path-resource-editor').forEach(row => {
+      row.querySelector('[data-intro-fields]').hidden = !!row.querySelector('[name="step_href"]').value;
+      row.querySelector('[data-move="up"]').disabled = !row.previousElementSibling;
+      row.querySelector('[data-move="down"]').disabled = !row.nextElementSibling;
+    });
   }
   language.addEventListener('change', refresh);
   kind?.addEventListener('change', refresh);
+  editor.addEventListener('change', refresh);
   editor.addEventListener('click', event => {
     const add = event.target.closest('[data-add]');
     const remove = event.target.closest('[data-remove]');
@@ -25,6 +32,9 @@ if (editor) {
       field.querySelector('div:not([hidden]) input')?.focus();
     }
     if (remove) remove.closest('fieldset').remove();
+    const move = event.target.closest('[data-move]');
+    if (move) { const row = move.closest('fieldset'); if (move.dataset.move === 'up' && row.previousElementSibling) row.previousElementSibling.before(row); else if (move.dataset.move === 'down' && row.nextElementSibling) row.nextElementSibling.after(row); }
+    refresh();
   });
   refresh();
 }

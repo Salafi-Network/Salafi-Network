@@ -46,6 +46,7 @@ type catalogTopic struct {
 	Count      int
 }
 type catalogPage struct {
+	PathResources []pathResource
 	Page
 	User                                     *member
 	Query, TopicFilter, Format, Filter, Sort string
@@ -123,24 +124,6 @@ func (a *App) serveCatalog(w http.ResponseWriter, r *http.Request, page Page, pa
 		http.Error(w, "Unable to load the library", 500)
 		return
 	}
-	available := map[string]bool{}
-	for _, x := range all {
-		if strings.TrimSpace(x.Title.In(p.Lang)) != "" {
-			section := "learn"
-			if x.Kind == "article" {
-				section = "articles"
-			}
-			available["/"+section+"/"+x.Slug] = true
-		}
-	}
-	for i := range all {
-		for j := range all[i].Steps {
-			if !available[all[i].Steps[j].Href] {
-				all[i].Steps[j].Href = ""
-			}
-		}
-	}
-
 	for _, item := range all {
 		belongs := (p.Section == "articles" && item.Kind == "article") || (p.Section == "learn" && item.Kind != "article")
 		if !belongs || strings.TrimSpace(item.Title.In(p.Lang)) == "" {
@@ -197,6 +180,7 @@ func (a *App) serveCatalog(w http.ResponseWriter, r *http.Request, page Page, pa
 			p.Paths = append(p.Paths, item)
 		}
 	}
+	p.resolvePath(all)
 	var b bytes.Buffer
 	if err := a.tmpl.ExecuteTemplate(&b, "catalog.html", p); err != nil {
 		http.Error(w, "Unable to render the library", 500)

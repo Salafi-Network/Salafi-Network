@@ -53,6 +53,8 @@ type commentNode struct {
 	Locked      bool
 }
 type communityPage struct {
+	Page
+	LanguageSwitch                                      string
 	AdminTab, EditorMode, ContentLanguage, OriginalSlug string
 	AdminSaved                                          bool
 	Editor                                              catalogItem
@@ -129,7 +131,7 @@ func openCommunity(path string) (*Community, error) {
 		db.Close()
 		return nil, err
 	}
-	tmpl, err := template.ParseFS(assets, "templates/community.html", "templates/members.html")
+	tmpl, err := template.New("").Funcs(baseTemplateFuncs()).ParseFS(assets, "templates/community.html", "templates/members.html")
 	if err != nil {
 		db.Close()
 		return nil, err
@@ -207,7 +209,9 @@ func (c *Community) allow(r *http.Request) bool {
 func (c *Community) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	p := communityPage{User: c.user(r), View: strings.TrimPrefix(strings.TrimSuffix(r.URL.Path, "/"), "/community")}
+	lang := preferredLanguage(r)
+	rememberLanguage(w, lang)
+	p := communityPage{Page: languagePage(lang), LanguageSwitch: languageSwitchURL(r), User: c.user(r), View: strings.TrimPrefix(strings.TrimSuffix(r.URL.Path, "/"), "/community")}
 	if !localAdminRequest(r) {
 		if p.View == "/admin" || strings.HasPrefix(p.View, "/admin/") {
 			http.Error(w, "Administration is available only on localhost.", http.StatusForbidden)
@@ -246,17 +250,17 @@ func (c *Community) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if csrf == nil || subtle.ConstantTimeCompare([]byte(r.PostForm.Get("csrf")), []byte(p.CSRF)) != 1 {
-			http.Error(w, "Please reload the page and try again.", 403)
+			http.Error(w, forumTranslator(lang)("Please reload the page and try again."), 403)
 			return
 		}
 		if !c.allow(r) {
-			http.Error(w, "Too many requests. Please try again in five minutes.", 429)
+			http.Error(w, forumTranslator(lang)("Too many requests. Please try again in five minutes."), 429)
 			return
 		}
 		if err = c.post(w, r, &p); err == nil {
 			return
 		} else {
-			p.Error = err.Error()
+			p.Error = forumTranslator(lang)(err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 		}
 	} else if r.Method != "GET" && r.Method != "HEAD" {
@@ -274,7 +278,13 @@ func (c *Community) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var out bytes.Buffer
-	if err = c.tmpl.ExecuteTemplate(&out, "community.html", p); err != nil {
+	render, cloneErr := c.tmpl.Clone()
+	if cloneErr != nil {
+		http.Error(w, "Unable to render community", 500)
+		return
+	}
+	render = render.Funcs(template.FuncMap{"tr": forumTranslator(lang)})
+	if err = render.ExecuteTemplate(&out, "community.html", p); err != nil {
 		log.Print(err)
 		http.Error(w, "Unable to render community", 500)
 		return
