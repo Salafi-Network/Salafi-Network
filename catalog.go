@@ -181,6 +181,7 @@ func (a *App) serveCatalog(w http.ResponseWriter, r *http.Request, page Page, pa
 		}
 	}
 	p.resolvePath(all)
+	p.SEO = catalogSEO(p, r)
 	var b bytes.Buffer
 	if err := a.tmpl.ExecuteTemplate(&b, "catalog.html", p); err != nil {
 		http.Error(w, "Unable to render the library", 500)

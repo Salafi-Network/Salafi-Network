@@ -22,6 +22,7 @@ type App struct {
 	community *Community
 }
 type Page struct {
+	SEO                       seoMetadata
 	Lang, Dir, Section, Title string
 	Arabic                    bool
 }
@@ -52,6 +53,9 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Referrer-Policy", "same-origin")
 	w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'self'")
+	if a.serveDiscovery(w, r) {
+		return
+	}
 	if strings.HasPrefix(r.URL.Path, "/static/") {
 		sub, _ := fs.Sub(assets, "static")
 		http.StripPrefix("/static/", http.FileServer(http.FS(sub))).ServeHTTP(w, r)
@@ -112,6 +116,10 @@ func (a *App) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(parts) > 2 {
 		http.NotFound(w, r)
 		return
+	}
+	p.SEO = pageSEO(p, "/"+p.Lang+"/", r)
+	if p.Section == "about" {
+		p.SEO = pageSEO(p, "/"+p.Lang+"/about", r)
 	}
 	var b bytes.Buffer
 	if err := a.tmpl.ExecuteTemplate(&b, "page.html", p); err != nil {

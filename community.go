@@ -131,7 +131,7 @@ func openCommunity(path string) (*Community, error) {
 		db.Close()
 		return nil, err
 	}
-	tmpl, err := template.New("").Funcs(baseTemplateFuncs()).ParseFS(assets, "templates/community.html", "templates/members.html")
+	tmpl, err := template.New("").Funcs(baseTemplateFuncs()).ParseFS(assets, "templates/community.html", "templates/members.html", "templates/seo.html")
 	if err != nil {
 		db.Close()
 		return nil, err
@@ -207,6 +207,7 @@ func (c *Community) allow(r *http.Request) bool {
 	return v.Count <= 40
 }
 func (c *Community) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Robots-Tag", "noindex, follow")
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	lang := preferredLanguage(r)
@@ -276,6 +277,10 @@ func (c *Community) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Unable to load the community", 500)
 		}
 		return
+	}
+	p.SEO = communitySEO(p, r)
+	if !p.SEO.NoIndex {
+		w.Header().Del("X-Robots-Tag")
 	}
 	var out bytes.Buffer
 	render, cloneErr := c.tmpl.Clone()
