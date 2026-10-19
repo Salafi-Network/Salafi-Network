@@ -34,6 +34,7 @@ type catalogStep struct {
 	Href  string
 }
 type catalogItem struct {
+	AuthorScholar                            string
 	Slug, Kind, Topic, Image, Author, Source string
 	Title, Summary                           localizedText
 	Featured, Beginner                       bool
@@ -46,7 +47,9 @@ type catalogTopic struct {
 	Count      int
 }
 type catalogPage struct {
-	PathResources []pathResource
+	ScholarIndex    map[string]catalogItem
+	ScholarArticles []catalogItem
+	PathResources   []pathResource
 	Page
 	User                                     *member
 	Query, TopicFilter, Format, Filter, Sort string
@@ -180,6 +183,7 @@ func (a *App) serveCatalog(w http.ResponseWriter, r *http.Request, page Page, pa
 			p.Paths = append(p.Paths, item)
 		}
 	}
+	p.resolveAuthors(all)
 	p.resolvePath(all)
 	p.SEO = catalogSEO(p, r)
 	var b bytes.Buffer

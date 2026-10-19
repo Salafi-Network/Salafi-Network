@@ -88,7 +88,7 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 		return nil
 	}
 	if action == "content-save" {
-		item := catalogItem{Slug: strings.TrimSpace(r.FormValue("slug")), Kind: r.FormValue("kind"), Topic: r.FormValue("topic"), Author: strings.TrimSpace(r.FormValue("author")), Source: strings.TrimSpace(r.FormValue("source")), Image: "serene-courtyard.png", Title: localizedText{strings.TrimSpace(r.FormValue("title_en")), strings.TrimSpace(r.FormValue("title_ar"))}, Summary: localizedText{r.FormValue("summary_en"), r.FormValue("summary_ar")}, Featured: r.FormValue("featured") == "on", Beginner: r.FormValue("beginner") == "on"}
+		item := catalogItem{AuthorScholar: strings.TrimSpace(r.FormValue("author_scholar")), Slug: strings.TrimSpace(r.FormValue("slug")), Kind: r.FormValue("kind"), Topic: r.FormValue("topic"), Author: strings.TrimSpace(r.FormValue("author")), Source: strings.TrimSpace(r.FormValue("source")), Image: "serene-courtyard.png", Title: localizedText{strings.TrimSpace(r.FormValue("title_en")), strings.TrimSpace(r.FormValue("title_ar"))}, Summary: localizedText{r.FormValue("summary_en"), r.FormValue("summary_ar")}, Featured: r.FormValue("featured") == "on", Beginner: r.FormValue("beginner") == "on"}
 
 		defer func() {
 			p.Editor = item
@@ -102,6 +102,23 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 
 		if item.Kind != "article" && item.Kind != "book" && item.Kind != "scholar" && item.Kind != "path" {
 			return errors.New("Choose a content type.")
+		}
+
+		if item.AuthorScholar != "" {
+			var raw string
+			if err := c.db.QueryRow("SELECT payload FROM library WHERE slug=?", item.AuthorScholar).Scan(&raw); err != nil {
+				return errors.New("Choose an existing scholar, or leave the scholar link empty.")
+			}
+			var scholar catalogItem
+			if err := json.Unmarshal([]byte(raw), &scholar); err != nil {
+				return err
+			}
+			if scholar.Kind != "scholar" || item.Kind != "article" {
+				return errors.New("Only articles can be linked to a scholar profile.")
+			}
+			if item.Author == "" {
+				item.Author = scholar.AdminTitle()
+			}
 		}
 
 		for i, h := range r.PostForm["heading_en"] {
@@ -254,6 +271,10 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 					return e
 				}
 				dirty := false
+				if x.AuthorScholar == slug {
+					x.AuthorScholar = ""
+					dirty = true
+				}
 				for i := range x.Steps {
 					if x.Steps[i].Href == "/articles/"+slug || x.Steps[i].Href == "/learn/"+slug {
 						x.Steps[i].Href = ""

@@ -34,3 +34,5 @@ search input, unknown routes, and existing forum functionality.
 
 Both sections use the existing simple illustration in `static/forum-skyline.svg`.
 
+
+Article authors can link to a scholar profile using the Author section in the editor. Choose an existing scholar from Learning; the author name opens that profile and the profile lists associated articles in the current language. Keep the author name as plain text when no profile is needed. Deleting a scholar clears the link while preserving the attribution and articles.
