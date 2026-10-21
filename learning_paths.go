@@ -31,11 +31,7 @@ func (p *catalogPage) resolvePath(all []catalogItem) {
 		if linked, ok := byLink[entry.Href]; ok && linked.Kind != "path" {
 			lang := p.Lang
 			if strings.TrimSpace(linked.Title.In(lang)) == "" {
-				if lang == "ar" {
-					lang = "en"
-				} else {
-					lang = "ar"
-				}
+				continue
 			}
 			x.Title = linked.Title.In(lang)
 			x.Summary = linked.Summary.In(lang)

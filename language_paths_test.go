@@ -55,6 +55,9 @@ func TestLanguageAcrossSections(t *testing.T) {
 	if !strings.Contains(w.Body.String(), `lang="en" dir="ltr"`) {
 		t.Fatal("cannot switch back")
 	}
+	if strings.Contains(w.Body.String(), "&amp;nbsp;") {
+		t.Fatal("forum labels display HTML entities")
+	}
 	if cookies["sn_language"].Value != "en" {
 		t.Fatal("English not persisted")
 	}
@@ -142,5 +145,27 @@ func TestLearningResourceCollection(t *testing.T) {
 	v.Set("step_href", "/articles/missing")
 	if w = f.request("POST", "/community/admin", v); w.Code != 400 {
 		t.Fatal("missing resource accepted")
+	}
+}
+
+func TestPathResourcesStayInSelectedLanguage(t *testing.T) {
+	all := []catalogItem{
+		{Slug: "arabic", Kind: "article", Title: localizedText{AR: "عربي"}},
+		{Slug: "english", Kind: "article", Title: localizedText{EN: "English"}},
+	}
+	for _, lang := range []string{"en", "ar"} {
+		p := catalogPage{}
+		p.Lang = lang
+		p.Selected.Kind = "path"
+		for _, item := range all {
+			p.Selected.Steps = append(p.Selected.Steps, catalogStep{Href: "/articles/" + item.Slug})
+		}
+		p.resolvePath(all)
+		if len(p.PathResources) != 1 {
+			t.Fatalf("%s: wrong resources: %+v", lang, p.PathResources)
+		}
+		if !strings.HasPrefix(p.PathResources[0].Href, "/"+lang+"/") {
+			t.Fatal("cross-language resource link")
+		}
 	}
 }
