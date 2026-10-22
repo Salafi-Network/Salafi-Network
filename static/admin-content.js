@@ -6,12 +6,21 @@ if (editor) {
     section: editor.querySelector('.content-sections fieldset').cloneNode(true),
     step: editor.querySelector('.content-steps fieldset').cloneNode(true)
   };
+  const resourceOptions = Array.from(templates.step.querySelector('[name="step_href"]').options, option => option.cloneNode(true));
   function refresh() {
     editor.querySelectorAll('[data-lang]').forEach(block => block.hidden = language.value !== 'both' && block.dataset.lang !== language.value);
     ['en', 'ar'].forEach(lang => editor.querySelector('[name="title_' + lang + '"]').required = language.value === 'both' || language.value === lang);
     editor.querySelector('[data-path-fields]').hidden = !kind || kind.value !== 'path';
     editor.querySelector('[data-article-fields]').hidden = kind?.value === 'path';
-    editor.querySelectorAll('.path-resource-editor').forEach(row => {
+    const resourceRows = Array.from(editor.querySelectorAll('.path-resource-editor'));
+    const selectedResources = new Set(resourceRows.map(row => row.querySelector('[name="step_href"]').value).filter(Boolean));
+    resourceRows.forEach(row => {
+      const picker = row.querySelector('[name="step_href"]');
+      const current = picker.value;
+      picker.replaceChildren(...resourceOptions
+        .filter(option => !option.value || option.value === current || !selectedResources.has(option.value))
+        .map(option => option.cloneNode(true)));
+      picker.value = current;
       row.querySelector('[data-intro-fields]').hidden = !!row.querySelector('[name="step_href"]').value;
       row.querySelector('[data-move="up"]').disabled = !row.previousElementSibling;
       row.querySelector('[data-move="down"]').disabled = !row.nextElementSibling;
