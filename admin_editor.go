@@ -87,6 +87,10 @@ func (c *Community) prepareEditor(r *http.Request, p *communityPage) error {
 			p.Editor = catalogItem{Kind: "article", Topic: "aqeedah"}
 			if p.AdminTab == "learning" {
 				p.Editor.Kind = "book"
+				switch r.URL.Query().Get("kind") {
+				case "path", "scholar":
+					p.Editor.Kind = r.URL.Query().Get("kind")
+				}
 			}
 			p.ContentLanguage = "en"
 		}
@@ -118,4 +122,26 @@ func (c *Community) prepareEditor(r *http.Request, p *communityPage) error {
 		}
 	}
 	return nil
+}
+
+type adminLearningGroup struct {
+	Kind, Title, Description, Icon, CSRF, AdminTab string
+	CatalogItems                                   []catalogItem
+}
+
+func (p communityPage) LearningGroups() []adminLearningGroup {
+	groups := []adminLearningGroup{
+		{Kind: "book", Title: "Books", Description: "Manage books and reading resources.", Icon: "book-open"},
+		{Kind: "scholar", Title: "Scholars", Description: "Manage scholar profiles and their linked articles.", Icon: "users"},
+		{Kind: "path", Title: "Learning paths", Description: "Organize resources into a study order and set their difficulty.", Icon: "folder"},
+	}
+	for i := range groups {
+		groups[i].CSRF, groups[i].AdminTab = p.CSRF, "learning"
+		for _, item := range p.CatalogItems {
+			if item.Kind == groups[i].Kind {
+				groups[i].CatalogItems = append(groups[i].CatalogItems, item)
+			}
+		}
+	}
+	return groups
 }

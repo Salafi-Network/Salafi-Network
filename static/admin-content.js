@@ -57,6 +57,9 @@ if (search) {
       if (!row.hidden) count++;
     });
     document.querySelector('[data-empty-list]').hidden = count > 0;
+    document.querySelectorAll('[data-learning-group]').forEach(group => {
+      group.querySelector('[data-group-empty]').hidden = Array.from(group.querySelectorAll('[data-content-row]')).some(row => !row.hidden);
+    });
   };
   search.addEventListener('input', update);
   update();
