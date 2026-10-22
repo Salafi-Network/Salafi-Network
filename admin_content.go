@@ -104,6 +104,19 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 			return errors.New("Choose a content type.")
 		}
 
+		if item.Kind == "path" {
+			item.Difficulty = strings.TrimSpace(r.FormValue("difficulty"))
+			if item.Difficulty == "" {
+				item.Difficulty = "beginner"
+			}
+			switch item.Difficulty {
+			case "beginner", "intermediate", "hard", "expert":
+			default:
+				return errors.New("Choose Beginner, Intermediate, Hard, or Expert.")
+			}
+			item.Beginner = item.Difficulty == "beginner"
+		}
+
 		if item.AuthorScholar != "" {
 			var raw string
 			if err := c.db.QueryRow("SELECT payload FROM library WHERE slug=?", item.AuthorScholar).Scan(&raw); err != nil {

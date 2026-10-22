@@ -35,6 +35,7 @@ type catalogStep struct {
 }
 type catalogItem struct {
 	AuthorScholar                            string
+	Difficulty                               string
 	Slug, Kind, Topic, Image, Author, Source string
 	Title, Summary                           localizedText
 	Featured, Beginner                       bool
@@ -194,4 +195,24 @@ func (a *App) serveCatalog(w http.ResponseWriter, r *http.Request, page Page, pa
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Write(b.Bytes())
+}
+
+// Old paths were displayed as Beginner before difficulty was configurable.
+func (item catalogItem) PathDifficulty() string {
+	if item.Difficulty == "" {
+		return "beginner"
+	}
+	return item.Difficulty
+}
+func (item catalogItem) DifficultyLabel(lang string) string {
+	switch item.PathDifficulty() {
+	case "intermediate":
+		return (localizedText{"Intermediate", "متوسط"}).In(lang)
+	case "hard":
+		return (localizedText{"Hard", "صعب"}).In(lang)
+	case "expert":
+		return (localizedText{"Expert", "خبير"}).In(lang)
+	default:
+		return (localizedText{"Beginner", "مبتدئ"}).In(lang)
+	}
 }

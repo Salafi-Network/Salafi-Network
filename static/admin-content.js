@@ -12,6 +12,7 @@ if (editor) {
     ['en', 'ar'].forEach(lang => editor.querySelector('[name="title_' + lang + '"]').required = language.value === 'both' || language.value === lang);
     editor.querySelector('[data-path-fields]').hidden = !kind || kind.value !== 'path';
     editor.querySelector('[data-article-fields]').hidden = kind?.value === 'path';
+    editor.querySelector('[data-beginner-option]').hidden = kind?.value === 'path';
     const resourceRows = Array.from(editor.querySelectorAll('.path-resource-editor'));
     const selectedResources = new Set(resourceRows.map(row => row.querySelector('[name="step_href"]').value).filter(Boolean));
     resourceRows.forEach(row => {
