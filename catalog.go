@@ -38,6 +38,7 @@ type catalogItem struct {
 	Difficulty                               string
 	Slug, Kind, Topic, Image, Author, Source string
 	Title, Summary                           localizedText
+	MetaDescription                          localizedText
 	Featured, Beginner                       bool
 	Sections                                 []catalogSection
 	Steps                                    []catalogStep

@@ -51,7 +51,11 @@ func catalogSEO(p catalogPage, r *http.Request) seoMetadata {
 		s.Description = p.Text("Explore learning paths, books, and scholarly resources.", "استكشف مسارات التعلّم والكتب ومصادر أهل العلم.")
 	}
 	if p.Selected.Slug != "" {
-		s.Description = excerpt(p.Selected.Summary.In(p.Lang))
+		description := p.Selected.MetaDescription.In(p.Lang)
+		if strings.TrimSpace(description) == "" {
+			description = p.Selected.Summary.In(p.Lang)
+		}
+		s.Description = excerpt(description)
 		if s.Description == "" {
 			for _, section := range p.Selected.Sections {
 				if section.Body.In(p.Lang) != "" {

@@ -33,10 +33,15 @@ func TestSEOPublicMetadata(t *testing.T) {
 	if !strings.Contains(w.Body.String(), `content="noindex, follow"`) {
 		t.Fatal("Development should not be indexed")
 	}
-	p := catalogPage{Page: Page{Lang: "ar", Arabic: true, Section: "articles", Title: `عنوان <script>`}, Selected: catalogItem{Slug: "arabic-only", Kind: "article", Title: localizedText{AR: "عنوان"}, Summary: localizedText{AR: "ملخص"}}}
+	p := catalogPage{Page: Page{Lang: "ar", Arabic: true, Section: "articles", Title: `عنوان <script>`}, Selected: catalogItem{Slug: "arabic-only", Kind: "article", Title: localizedText{AR: "عنوان"}, Summary: localizedText{AR: "ملخص"}, MetaDescription: localizedText{EN: "English meta description", AR: "وصف ميتا عربي"}}}
 	s := catalogSEO(p, httptest.NewRequest("GET", publicOrigin+"/ar/articles/arabic-only", nil))
-	if len(s.Alternates) != 1 || s.Alternates[0].Lang != "ar" || s.Description != "ملخص" {
+	if len(s.Alternates) != 1 || s.Alternates[0].Lang != "ar" || s.Description != "وصف ميتا عربي" {
 		t.Fatalf("Wrong localized metadata: %+v", s)
+	}
+	p.Selected.MetaDescription = localizedText{}
+	s = catalogSEO(p, httptest.NewRequest("GET", publicOrigin+"/ar/articles/arabic-only", nil))
+	if s.Description != "ملخص" {
+		t.Fatalf("Summary fallback should be preserved: %+v", s)
 	}
 }
 

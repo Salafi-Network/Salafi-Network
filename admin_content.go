@@ -88,7 +88,7 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 		return nil
 	}
 	if action == "content-save" {
-		item := catalogItem{AuthorScholar: strings.TrimSpace(r.FormValue("author_scholar")), Slug: strings.TrimSpace(r.FormValue("slug")), Kind: r.FormValue("kind"), Topic: r.FormValue("topic"), Author: strings.TrimSpace(r.FormValue("author")), Source: strings.TrimSpace(r.FormValue("source")), Image: "serene-courtyard.png", Title: localizedText{strings.TrimSpace(r.FormValue("title_en")), strings.TrimSpace(r.FormValue("title_ar"))}, Summary: localizedText{r.FormValue("summary_en"), r.FormValue("summary_ar")}, Featured: r.FormValue("featured") == "on", Beginner: r.FormValue("beginner") == "on"}
+		item := catalogItem{AuthorScholar: strings.TrimSpace(r.FormValue("author_scholar")), Slug: strings.TrimSpace(r.FormValue("slug")), Kind: r.FormValue("kind"), Topic: r.FormValue("topic"), Author: strings.TrimSpace(r.FormValue("author")), Source: strings.TrimSpace(r.FormValue("source")), Image: "serene-courtyard.png", Title: localizedText{strings.TrimSpace(r.FormValue("title_en")), strings.TrimSpace(r.FormValue("title_ar"))}, Summary: localizedText{r.FormValue("summary_en"), r.FormValue("summary_ar")}, MetaDescription: localizedText{strings.TrimSpace(r.FormValue("meta_description_en")), strings.TrimSpace(r.FormValue("meta_description_ar"))}, Featured: r.FormValue("featured") == "on", Beginner: r.FormValue("beginner") == "on"}
 
 		defer func() {
 			p.Editor = item
@@ -193,6 +193,9 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 		}
 		if len([]rune(item.Title.EN)) > 200 || len([]rune(item.Title.AR)) > 200 {
 			return errors.New("Keep each title under 200 characters.")
+		}
+		if len([]rune(item.MetaDescription.EN)) > 200 || len([]rune(item.MetaDescription.AR)) > 200 {
+			return errors.New("Keep each SEO description under 200 characters.")
 		}
 		var topicExists int
 		if err := c.db.QueryRow("SELECT count(*) FROM library_topics WHERE slug=?", item.Topic).Scan(&topicExists); err != nil {
