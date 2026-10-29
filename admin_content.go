@@ -232,8 +232,8 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 		if err != nil {
 			return err
 		}
-		if len(b) > 28000 {
-			return errors.New("Please keep content below 28 KB.")
+		if len(b) > 100000 {
+			return errors.New("Please keep content below 100 KB.")
 		}
 		original := r.FormValue("original")
 		if original == "" {
