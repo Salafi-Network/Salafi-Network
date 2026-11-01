@@ -5,7 +5,7 @@ import "strings"
 func (p *catalogPage) resolveAuthors(items []catalogItem) {
 	p.ScholarIndex = make(map[string]catalogItem)
 	for _, item := range items {
-		if item.Kind == "scholar" {
+		if item.Kind == "scholar" && item.FigureTypeValue() == "scholar" {
 			p.ScholarIndex[item.Slug] = item
 		}
 		if p.Selected.Kind == "scholar" && item.Kind == "article" && item.AuthorScholar == p.Selected.Slug && strings.TrimSpace(item.Title.In(p.Lang)) != "" {

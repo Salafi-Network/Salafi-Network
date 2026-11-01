@@ -2,6 +2,7 @@ const editor = document.querySelector('[data-content-editor]');
 if (editor) {
   const language = editor.querySelector('[data-language]');
   const kind = editor.querySelector('[data-kind]');
+  const figureFields = editor.querySelector('[data-figure-fields]');
   const templates = {
     section: editor.querySelector('.content-sections fieldset').cloneNode(true),
     step: editor.querySelector('.content-steps fieldset').cloneNode(true)
@@ -11,6 +12,7 @@ if (editor) {
     editor.querySelectorAll('[data-lang]').forEach(block => block.hidden = language.value !== 'both' && block.dataset.lang !== language.value);
     ['en', 'ar'].forEach(lang => editor.querySelector('[name="title_' + lang + '"]').required = language.value === 'both' || language.value === lang);
     editor.querySelector('[data-path-fields]').hidden = !kind || kind.value !== 'path';
+    if (figureFields) figureFields.hidden = !kind || kind.value !== 'scholar';
     editor.querySelector('[data-article-fields]').hidden = kind?.value === 'path';
     editor.querySelector('[data-beginner-option]').hidden = kind?.value === 'path';
     const resourceRows = Array.from(editor.querySelectorAll('.path-resource-editor'));

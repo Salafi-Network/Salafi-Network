@@ -39,6 +39,7 @@ type catalogItem struct {
 	Slug, Kind, Topic, Image, Author, Source string
 	Title, Summary                           localizedText
 	MetaDescription                          localizedText
+	FigureType                               string
 	Featured, Beginner                       bool
 	Sections                                 []catalogSection
 	Steps                                    []catalogStep
@@ -53,12 +54,12 @@ type catalogPage struct {
 	ScholarArticles []catalogItem
 	PathResources   []pathResource
 	Page
-	User                                     *member
-	Query, TopicFilter, Format, Filter, Sort string
-	Items, Books, Scholars, Paths, Recent    []catalogItem
-	Topics                                   []catalogTopic
-	Selected, Featured                       catalogItem
-	Total                                    int
+	User                                                       *member
+	Query, TopicFilter, Format, Filter, Sort, FigureTypeFilter string
+	Items, Books, Scholars, Paths, Recent                      []catalogItem
+	Topics                                                     []catalogTopic
+	Selected, Featured                                         catalogItem
+	Total                                                      int
 }
 
 func (p catalogPage) KindLabel(k string) string {
@@ -68,11 +69,31 @@ func (p catalogPage) KindLabel(k string) string {
 	case "book":
 		return p.Text("Book", "كتاب")
 	case "scholar":
-		return p.Text("Scholar", "عالم")
+		return p.Text("Notable figure", "شخصية بارزة")
 	case "path":
 		return p.Text("Learning path", "مسار تعلّم")
 	}
 	return ""
+}
+func (item catalogItem) FigureTypeValue() string {
+	switch item.FigureType {
+	case "prophet", "companion", "scholar", "other":
+		return item.FigureType
+	default:
+		return "scholar"
+	}
+}
+func figureTypeMatches(item catalogItem, filter string) bool {
+	return filter == "" || (item.Kind == "scholar" && item.FigureTypeValue() == filter)
+}
+func (item catalogItem) FigureTypeLabel(lang string) string {
+	labels := map[string]localizedText{
+		"prophet":   {"Prophet", "نبيّ"},
+		"companion": {"Companion", "صحابي"},
+		"scholar":   {"Scholar", "عالم"},
+		"other":     {"Other notable figure", "شخصية بارزة"},
+	}
+	return labels[item.FigureTypeValue()].In(lang)
 }
 func (p catalogPage) TopicName(slug string) string {
 	for _, t := range p.Topics {
@@ -98,7 +119,7 @@ func (p catalogPage) ReadTime(item catalogItem) int {
 	return words/180 + 1
 }
 func (a *App) serveCatalog(w http.ResponseWriter, r *http.Request, page Page, parts []string) {
-	p := catalogPage{Page: page, Query: strings.TrimSpace(r.URL.Query().Get("q")), TopicFilter: r.URL.Query().Get("topic"), Format: r.URL.Query().Get("format"), Filter: r.URL.Query().Get("filter"), Sort: r.URL.Query().Get("sort")}
+	p := catalogPage{Page: page, Query: strings.TrimSpace(r.URL.Query().Get("q")), TopicFilter: r.URL.Query().Get("topic"), Format: r.URL.Query().Get("format"), Filter: r.URL.Query().Get("filter"), Sort: r.URL.Query().Get("sort"), FigureTypeFilter: r.URL.Query().Get("figure_type")}
 	if a.community != nil {
 		p.User = a.community.user(r)
 	}
@@ -164,6 +185,9 @@ func (a *App) serveCatalog(w http.ResponseWriter, r *http.Request, page Page, pa
 			continue
 		}
 		if p.Filter == "beginner" && !item.Beginner {
+			continue
+		}
+		if !figureTypeMatches(item, p.FigureTypeFilter) {
 			continue
 		}
 		p.Items = append(p.Items, item)

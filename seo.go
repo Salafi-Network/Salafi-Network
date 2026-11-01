@@ -48,7 +48,7 @@ func catalogSEO(p catalogPage, r *http.Request) seoMetadata {
 	if p.Section == "articles" {
 		s.Description = p.Text("Browse beneficial articles and organized knowledge from Salafi Network.", "تصفّح المقالات النافعة والمعرفة المنظّمة في شبكة سلفي.")
 	} else {
-		s.Description = p.Text("Explore learning paths, books, and scholarly resources.", "استكشف مسارات التعلّم والكتب ومصادر أهل العلم.")
+		s.Description = p.Text("Explore learning paths, books, Prophets, Companions, scholars, and notable figures.", "استكشف مسارات التعلّم والكتب والأنبياء والصحابة والعلماء وأعلام الإسلام.")
 	}
 	if p.Selected.Slug != "" {
 		description := p.Selected.MetaDescription.In(p.Lang)
@@ -78,7 +78,7 @@ func catalogSEO(p catalogPage, r *http.Request) seoMetadata {
 			s.Author = p.Selected.Author
 		}
 	}
-	if p.Query != "" || p.TopicFilter != "" || p.Format != "" || p.Filter != "" || p.Sort != "" {
+	if p.Query != "" || p.TopicFilter != "" || p.Format != "" || p.Filter != "" || p.Sort != "" || p.FigureTypeFilter != "" {
 		s.NoIndex = true
 	}
 	return s

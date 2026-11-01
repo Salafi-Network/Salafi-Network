@@ -88,8 +88,10 @@ func (c *Community) prepareEditor(r *http.Request, p *communityPage) error {
 			if p.AdminTab == "learning" {
 				p.Editor.Kind = "book"
 				switch r.URL.Query().Get("kind") {
-				case "path", "scholar":
-					p.Editor.Kind = r.URL.Query().Get("kind")
+				case "path":
+					p.Editor.Kind = "path"
+				case "scholar":
+					p.Editor.Kind, p.Editor.FigureType = "scholar", "scholar"
 				}
 			}
 			p.ContentLanguage = "en"
@@ -132,7 +134,7 @@ type adminLearningGroup struct {
 func (p communityPage) LearningGroups() []adminLearningGroup {
 	groups := []adminLearningGroup{
 		{Kind: "book", Title: "Books", Description: "Manage books and reading resources.", Icon: "book-open"},
-		{Kind: "scholar", Title: "Scholars", Description: "Manage scholar profiles and their linked articles.", Icon: "users"},
+		{Kind: "scholar", Title: "Notable figures", Description: "Manage profiles for Prophets, Companions, scholars, and other important figures.", Icon: "users"},
 		{Kind: "path", Title: "Learning paths", Description: "Organize resources into a study order and set their difficulty.", Icon: "folder"},
 	}
 	for i := range groups {

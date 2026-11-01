@@ -19,7 +19,8 @@ func TestCatalogRoutesAndFilters(t *testing.T) {
 	}{
 		{"/en/articles", "Read beneficial articles", 200}, {"/ar/articles", "اقرأ مقالات نافعة", 200}, {"/en/learn", "Learn with clarity", 200}, {"/ar/learn", "تعلّم بوضوح", 200},
 		{"/en/articles/a-steady-study-routine", "Start with a manageable session", 200}, {"/en/learn/reading-plan", "class=\"resource-roadmap\"", 200},
-		{"/en/learn?format=book", "Explore books", 200}, {"/en/learn?format=scholar", "Official resource directory", 200},
+		{"/en/learn?format=book", "Explore books", 200}, {"/en/learn?format=scholar", "Notable figures", 200},
+		{"/en/learn?format=scholar&figure_type=prophet", "figure-filter-menu", 200},
 		{"/en/articles?q=zzzzzz", "No matching resources", 200}, {"/en/learn/not-a-resource", "", 404}, {"/en/articles/reading-plan", "", 404}, {"/en/learn/reading-plan/extra", "", 404},
 	} {
 		w := httptest.NewRecorder()
@@ -37,6 +38,21 @@ func TestCatalogRoutesAndFilters(t *testing.T) {
 	a.ServeHTTP(w, httptest.NewRequest("GET", "/en/learn?format=book", nil))
 	if strings.Contains(w.Body.String(), `class="scholar-card"`) || strings.Contains(w.Body.String(), `class="path-card"`) {
 		t.Fatal("Format filter ignored")
+	}
+}
+func TestFigureTypeLabelsAndFiltering(t *testing.T) {
+	if got := (catalogItem{}).FigureTypeValue(); got != "scholar" {
+		t.Fatalf("legacy profiles should default to scholars, got %q", got)
+	}
+	if got := (catalogItem{FigureType: "prophet"}).FigureTypeLabel("en"); got != "Prophet" {
+		t.Fatalf("unexpected English figure label: %q", got)
+	}
+	if got := (catalogItem{FigureType: "companion"}).FigureTypeLabel("ar"); got != "صحابي" {
+		t.Fatalf("unexpected Arabic figure label: %q", got)
+	}
+	figure := catalogItem{Kind: "scholar", FigureType: "companion"}
+	if !figureTypeMatches(figure, "companion") || figureTypeMatches(figure, "prophet") || figureTypeMatches(catalogItem{Kind: "book"}, "companion") {
+		t.Fatal("figure subtype filter did not isolate the requested figure type")
 	}
 }
 func TestCatalogIntegrity(t *testing.T) {

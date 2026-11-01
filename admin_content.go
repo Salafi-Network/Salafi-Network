@@ -88,7 +88,7 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 		return nil
 	}
 	if action == "content-save" {
-		item := catalogItem{AuthorScholar: strings.TrimSpace(r.FormValue("author_scholar")), Slug: strings.TrimSpace(r.FormValue("slug")), Kind: r.FormValue("kind"), Topic: r.FormValue("topic"), Author: strings.TrimSpace(r.FormValue("author")), Source: strings.TrimSpace(r.FormValue("source")), Image: "serene-courtyard.png", Title: localizedText{strings.TrimSpace(r.FormValue("title_en")), strings.TrimSpace(r.FormValue("title_ar"))}, Summary: localizedText{r.FormValue("summary_en"), r.FormValue("summary_ar")}, MetaDescription: localizedText{strings.TrimSpace(r.FormValue("meta_description_en")), strings.TrimSpace(r.FormValue("meta_description_ar"))}, Featured: r.FormValue("featured") == "on", Beginner: r.FormValue("beginner") == "on"}
+		item := catalogItem{AuthorScholar: strings.TrimSpace(r.FormValue("author_scholar")), Slug: strings.TrimSpace(r.FormValue("slug")), Kind: r.FormValue("kind"), Topic: r.FormValue("topic"), Author: strings.TrimSpace(r.FormValue("author")), Source: strings.TrimSpace(r.FormValue("source")), Image: "serene-courtyard.png", FigureType: strings.TrimSpace(r.FormValue("figure_type")), Title: localizedText{strings.TrimSpace(r.FormValue("title_en")), strings.TrimSpace(r.FormValue("title_ar"))}, Summary: localizedText{r.FormValue("summary_en"), r.FormValue("summary_ar")}, MetaDescription: localizedText{strings.TrimSpace(r.FormValue("meta_description_en")), strings.TrimSpace(r.FormValue("meta_description_ar"))}, Featured: r.FormValue("featured") == "on", Beginner: r.FormValue("beginner") == "on"}
 
 		defer func() {
 			p.Editor = item
@@ -102,6 +102,16 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 
 		if item.Kind != "article" && item.Kind != "book" && item.Kind != "scholar" && item.Kind != "path" {
 			return errors.New("Choose a content type.")
+		}
+		if item.Kind == "scholar" {
+			if item.FigureType == "" {
+				item.FigureType = "scholar"
+			}
+			switch item.FigureType {
+			case "prophet", "companion", "scholar", "other":
+			default:
+				return errors.New("Choose Prophet, Companion, Scholar, or Other notable figure.")
+			}
 		}
 
 		if item.Kind == "path" {
@@ -126,7 +136,7 @@ func (c *Community) manageContent(w http.ResponseWriter, r *http.Request, p *com
 			if err := json.Unmarshal([]byte(raw), &scholar); err != nil {
 				return err
 			}
-			if scholar.Kind != "scholar" || item.Kind != "article" {
+			if scholar.Kind != "scholar" || scholar.FigureTypeValue() != "scholar" || item.Kind != "article" {
 				return errors.New("Only articles can be linked to a scholar profile.")
 			}
 			if item.Author == "" {
