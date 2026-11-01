@@ -19,5 +19,6 @@
 .feature-symbol>.icon{width:28px;height:28px}
 .article-row,.path-card,.book-card{align-items:flex-start}
 .article-row-copy,.path-card>div,.book-card>div{min-width:0}
+.article-read-more{display:inline-flex;align-items:center;gap:5px;margin-top:2px;font-size:12px;font-weight:600;color:var(--blue)}.article-read-more>.icon{width:14px;height:14px}
 @media(max-width:760px){.path-card,.book-card{flex-direction:row}.path-grid,.book-grid{grid-template-columns:1fr}}
 @media(max-width:460px){.resource-symbol{width:36px;height:36px;flex-basis:36px;border-radius:10px}.resource-symbol>.icon{width:21px;height:21px}.knowledge-page .feature-card{grid-template-columns:minmax(0,1fr) 36px}}

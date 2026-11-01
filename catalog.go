@@ -97,6 +97,19 @@ func (p catalogPage) ReadTime(item catalogItem) int {
 	}
 	return words/180 + 1
 }
+func (p catalogPage) SummaryPreview(item catalogItem) string {
+	summary := strings.TrimSpace(item.Summary.In(p.Lang))
+	sentences := 0
+	for i, r := range summary {
+		if strings.ContainsRune(".!?؟۔", r) {
+			sentences++
+			if sentences == 2 {
+				return strings.TrimSpace(summary[:i+len(string(r))])
+			}
+		}
+	}
+	return summary
+}
 func (a *App) serveCatalog(w http.ResponseWriter, r *http.Request, page Page, parts []string) {
 	p := catalogPage{Page: page, Query: strings.TrimSpace(r.URL.Query().Get("q")), TopicFilter: r.URL.Query().Get("topic"), Format: r.URL.Query().Get("format"), Filter: r.URL.Query().Get("filter"), Sort: r.URL.Query().Get("sort")}
 	if a.community != nil {

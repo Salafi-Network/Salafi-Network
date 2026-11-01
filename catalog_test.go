@@ -17,7 +17,7 @@ func TestCatalogRoutesAndFilters(t *testing.T) {
 		path, contains string
 		status         int
 	}{
-		{"/en/articles", "Read beneficial articles", 200}, {"/ar/articles", "اقرأ مقالات نافعة", 200}, {"/en/learn", "Learn with clarity", 200}, {"/ar/learn", "تعلّم بوضوح", 200},
+		{"/en/articles", "Read more", 200}, {"/ar/articles", "اقرأ المزيد", 200}, {"/en/learn", "Learn with clarity", 200}, {"/ar/learn", "تعلّم بوضوح", 200},
 		{"/en/articles/a-steady-study-routine", "Start with a manageable session", 200}, {"/en/learn/reading-plan", "class=\"resource-roadmap\"", 200},
 		{"/en/learn?format=book", "Explore books", 200}, {"/en/learn?format=scholar", "Official resource directory", 200},
 		{"/en/articles?q=zzzzzz", "No matching resources", 200}, {"/en/learn/not-a-resource", "", 404}, {"/en/articles/reading-plan", "", 404}, {"/en/learn/reading-plan/extra", "", 404},
@@ -37,6 +37,22 @@ func TestCatalogRoutesAndFilters(t *testing.T) {
 	a.ServeHTTP(w, httptest.NewRequest("GET", "/en/learn?format=book", nil))
 	if strings.Contains(w.Body.String(), `class="scholar-card"`) || strings.Contains(w.Body.String(), `class="path-card"`) {
 		t.Fatal("Format filter ignored")
+	}
+}
+func TestSummaryPreviewShowsTwoSentencesInEachLanguage(t *testing.T) {
+	item := catalogItem{Summary: localizedText{
+		EN: "First sentence. Second sentence! Third sentence.",
+		AR: "الجملة الأولى. الجملة الثانية؟ الجملة الثالثة.",
+	}}
+	for _, tc := range []struct{ lang, want, omit string }{
+		{"en", "First sentence. Second sentence!", "Third sentence."},
+		{"ar", "الجملة الأولى. الجملة الثانية؟", "الجملة الثالثة."},
+	} {
+		p := catalogPage{Page: Page{Lang: tc.lang}}
+		preview := p.SummaryPreview(item)
+		if !strings.Contains(preview, tc.want) || strings.Contains(preview, tc.omit) {
+			t.Errorf("%s preview = %q; want first two sentences only", tc.lang, preview)
+		}
 	}
 }
 func TestCatalogIntegrity(t *testing.T) {
