@@ -23,6 +23,18 @@ func TestLandingAndLibrary(t *testing.T) {
 		}
 	}
 }
+func TestContentSecurityPolicyAllowsCloudflareWebAnalytics(t *testing.T) {
+	a, err := newApp("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	w := httptest.NewRecorder()
+	a.ServeHTTP(w, httptest.NewRequest("GET", "/en/", nil))
+	csp := w.Header().Get("Content-Security-Policy")
+	if !strings.Contains(csp, "script-src 'self' https://static.cloudflareinsights.com") || !strings.Contains(csp, "connect-src 'self'") {
+		t.Fatalf("Cloudflare Web Analytics is blocked by CSP: %s", csp)
+	}
+}
 func TestForumRedirectsAndRetiredRoutes(t *testing.T) {
 	t.Setenv("FORUM_URL", "http://localhost")
 	a, _ := newApp("")
