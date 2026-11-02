@@ -34,7 +34,7 @@ func (p *catalogPage) resolvePath(all []catalogItem) {
 				continue
 			}
 			x.Title = linked.Title.In(lang)
-			x.Summary = linked.Summary.In(lang)
+			x.Summary = p.SummaryPreview(linked)
 			x.Kind = linked.Kind
 			x.Image = linked.Image
 			x.Href = localizedResourceHref(entry.Href, lang)

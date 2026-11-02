@@ -169,3 +169,32 @@ func TestPathResourcesStayInSelectedLanguage(t *testing.T) {
 		}
 	}
 }
+
+func TestPathResourceSummariesAreLimitedToTwoSentences(t *testing.T) {
+	item := catalogItem{
+		Slug:  "long-introduction",
+		Kind:  "article",
+		Title: localizedText{EN: "Long introduction", AR: "مقدمة طويلة"},
+		Summary: localizedText{
+			EN: "First sentence. Second sentence! Third sentence?",
+			AR: "الجملة الأولى. الجملة الثانية! الجملة الثالثة؟",
+		},
+	}
+	want := map[string]string{
+		"en": "First sentence. Second sentence!",
+		"ar": "الجملة الأولى. الجملة الثانية!",
+	}
+	for lang, expected := range want {
+		p := catalogPage{}
+		p.Lang = lang
+		p.Selected.Kind = "path"
+		p.Selected.Steps = []catalogStep{{Href: "/articles/" + item.Slug}}
+		p.resolvePath([]catalogItem{item})
+		if len(p.PathResources) != 1 {
+			t.Fatalf("%s: expected one linked resource, got %d", lang, len(p.PathResources))
+		}
+		if got := p.PathResources[0].Summary; got != expected {
+			t.Errorf("%s: got summary %q, want %q", lang, got, expected)
+		}
+	}
+}
